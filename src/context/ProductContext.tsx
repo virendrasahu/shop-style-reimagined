@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Product } from '@/types/product';
 
 interface ProductContextType {
@@ -16,6 +16,7 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -23,6 +24,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<string>('featured');
 
   // Fetch products
   useEffect(() => {
@@ -62,7 +64,32 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     fetchCategories();
   }, []);
 
-  // Filter products when category or search query changes
+  // Parse URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    
+    // Get category from URL
+    const categoryParam = params.get('category');
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
+    }
+    
+    // Get search query from URL
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      // Also update localStorage
+      localStorage.setItem('shopSearch', searchParam);
+    }
+    
+    // Get sort order from URL
+    const sortParam = params.get('sort');
+    if (sortParam) {
+      setSortOrder(sortParam);
+    }
+  }, [location.search]);
+
+  // Filter and sort products when filters, search query, or sort order changes
   useEffect(() => {
     let result = [...products];
     
@@ -80,8 +107,24 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       );
     }
     
+    // Apply sorting
+    switch (sortOrder) {
+      case 'price-asc':
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        result.sort((a, b) => b.rating.rate - a.rating.rate);
+        break;
+      default: // 'featured' - no specific sorting
+        // Keep original order from API
+        break;
+    }
+    
     setFilteredProducts(result);
-  }, [products, activeCategory, searchQuery]);
+  }, [products, activeCategory, searchQuery, sortOrder]);
 
   const searchProducts = (query: string) => {
     setSearchQuery(query);

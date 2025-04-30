@@ -12,6 +12,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFoundPage from "./pages/NotFoundPage";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
               <div className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="*" element={<NotFoundPage />} />

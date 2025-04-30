@@ -1,4 +1,5 @@
 
+import { Link } from 'react-router-dom';
 import { useProducts } from '@/context/ProductContext';
 import { Product } from '@/types/product';
 import {
@@ -13,6 +14,27 @@ import { toast } from '@/components/ui/use-toast';
 
 const ProductCard = ({ product }: { product: Product }) => {
   const handleAddToCart = () => {
+    // Get current cart from localStorage
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    // Check if product already in cart
+    const existingItem = cart.find((item: any) => item.id === product.id);
+    
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      });
+    }
+    
+    // Save updated cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
     toast({
       title: "Added to cart",
       description: `${product.title} has been added to your cart.`,
@@ -21,29 +43,34 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   return (
     <Card className="product-card group">
-      <div className="product-img">
-        <img 
-          src={product.image} 
-          alt={product.title} 
-          className="h-full w-full object-contain transition-transform group-hover:scale-105"
-        />
-      </div>
-      <CardContent className="p-4">
-        <div className="mb-2">
-          <span className="product-badge capitalize">{product.category}</span>
+      <Link to={`/product/${product.id}`} className="block">
+        <div className="product-img">
+          <img 
+            src={product.image} 
+            alt={product.title} 
+            className="h-full w-full object-contain transition-transform group-hover:scale-105"
+          />
         </div>
-        <h3 className="font-medium text-sm line-clamp-2 h-10">{product.title}</h3>
-        <div className="flex items-center justify-between mt-2">
-          <p className="font-heading font-bold text-lg">${product.price.toFixed(2)}</p>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-medium text-yellow-500">★</span>
-            <span className="text-xs">{product.rating.rate} ({product.rating.count})</span>
+        <CardContent className="p-4">
+          <div className="mb-2">
+            <span className="product-badge capitalize">{product.category}</span>
           </div>
-        </div>
-      </CardContent>
+          <h3 className="font-medium text-sm line-clamp-2 h-10">{product.title}</h3>
+          <div className="flex items-center justify-between mt-2">
+            <p className="font-heading font-bold text-lg">${product.price.toFixed(2)}</p>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-yellow-500">★</span>
+              <span className="text-xs">{product.rating.rate} ({product.rating.count})</span>
+            </div>
+          </div>
+        </CardContent>
+      </Link>
       <CardFooter className="p-4 pt-0">
         <Button 
-          onClick={handleAddToCart} 
+          onClick={(e) => {
+            e.preventDefault(); // Prevent navigation to product detail
+            handleAddToCart();
+          }} 
           className="w-full bg-ecommerce-primary hover:bg-ecommerce-primary/90 text-white"
           size="sm"
         >
